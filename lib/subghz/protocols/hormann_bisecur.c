@@ -340,7 +340,7 @@ void subghz_protocol_decoder_hormann_bisecur_feed(void* context, bool level, uin
         case HormannBiSecurDecoderStepFoundPreambleAlternatingLong:
             // so far, the first bit is always 0, e.g. 0b01010000, 0b01110000
             if (!level && DURATION_DIFF(duration, duration_short) < duration_delta) {
-                manchester_advance(instance->manchester_saved_state, ManchesterEventShortLow,
+                manchester_advance(instance->manchester_saved_state, ManchesterEventShortHigh,
                     &instance->manchester_saved_state, NULL);
                 instance->decoder.parser_step = HormannBiSecurDecoderStepFoundData;
                 break;
@@ -354,15 +354,15 @@ void subghz_protocol_decoder_hormann_bisecur_feed(void* context, bool level, uin
             instance->decoder.parser_step = HormannBiSecurDecoderStepReset;
             break;
         case HormannBiSecurDecoderStepFoundData:
-            if (DURATION_DIFF(duration, duration_short) < duration_delta || (
-                instance->generic.data_count_bit == subghz_protocol_hormann_bisecur_const.min_count_bit_for_found - 1 &&
-                DURATION_DIFF(duration, duration_long + duration_short + duration_half_short) < duration_delta
-            )) {
-                event = level ? ManchesterEventShortHigh : ManchesterEventShortLow;
+            if (DURATION_DIFF(duration, duration_long) < duration_delta) {
+                event = level ? ManchesterEventLongLow : ManchesterEventLongHigh;
             }
             else {
-                if (DURATION_DIFF(duration, duration_long) < duration_delta) {
-                    event = level ? ManchesterEventLongHigh : ManchesterEventLongLow;
+                if (DURATION_DIFF(duration, duration_short) < duration_delta || (
+                    instance->generic.data_count_bit == subghz_protocol_hormann_bisecur_const.min_count_bit_for_found - 1 &&
+                    duration > duration_short
+                )) {
+                    event = level ? ManchesterEventShortLow : ManchesterEventShortHigh;
                 }
             }
 
